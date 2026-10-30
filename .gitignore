@@ -1,0 +1,61 @@
+﻿# Python bytecode and build output
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+
+# Data and generated runtime artifacts
+data/
+*.csv
+*.tsv
+plots/**
+src/plots/**
+!plots/**/
+!src/plots/**/
+!plots/**/*.png
+!src/plots/**/*.png
+wandb/**
+src/wandb/**
+!wandb/**/
+!src/wandb/**/
+!wandb/**/*.png
+!src/wandb/**/*.png
+.wandb/
+logs/
+*.log
