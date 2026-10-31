@@ -1,61 +1,42 @@
-﻿# Python bytecode and build output
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
 
-# Virtual environments
-venv/
+# PyTorch & Model Checkpoints
+checkpoints/
+*.pt
+*.pth
+*.bin
+*.h5
+*.safetensors
+
+# Data & Corpora
+data/
+*.txt.gz
+*.bin.gz
+
+# Weights & Biases
+wandb/
+.wandb/
+
+# Logs & Runtime
+logs/
+*.log
+
+# Environments
+.env
+.venv
 env/
+venv/
 ENV/
-env.bak/
-venv.bak/
 
-# IDEs and OS files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-Thumbs.db
-
-# Jupyter
+# Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 *.ipynb_checkpoints/
 
-# Data and generated runtime artifacts
-data/
-*.csv
-*.tsv
-plots/**
-src/plots/**
-!plots/**/
-!src/plots/**/
-!plots/**/*.png
-!src/plots/**/*.png
-wandb/**
-src/wandb/**
-!wandb/**/
-!src/wandb/**/
-!wandb/**/*.png
-!src/wandb/**/*.png
-.wandb/
-logs/
-*.log
+# IDE files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
