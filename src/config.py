@@ -64,7 +64,7 @@ class SFTConfig:
 @dataclass
 class WandbConfig:
     enabled: bool = True
-    project: str = "custom-llm-from-scratch"
+    project: str = "build-mini-LLM"
     run_name: str = "tinystories-28m-pretrain"
     entity: Optional[str] = None
     notes: str = "28M Transformer on TinyStories"
