@@ -53,7 +53,7 @@ class TrainingConfig:
 class SFTConfig:
     learning_rate: float = 3e-5      # lower lr to avoid catastrophic forgetting
     min_lr: float = 3e-6
-    max_steps: int = 1500            # ~35 mins on Colab T4
+    max_steps: int = 1500            # ~35 mins
     warmup_steps: int = 100
     batch_size: int = 16
     gradient_accumulation_steps: int = 4
@@ -68,4 +68,4 @@ class WandbConfig:
     run_name: str = "tinystories-28m-pretrain"
     entity: Optional[str] = None
     notes: str = "28M Transformer on TinyStories"
-    tags: list = field(default_factory=lambda: ["pretraining", "28M", "tinystories", "colab-t4"])
+    tags: list = field(default_factory=lambda: ["pretraining", "28M", "tinystories", "kaggle-gpu"])

@@ -1,11 +1,12 @@
-# Deep Learning Framework (PyTorch)
+# DLFramework (PyTorch)
 torch>=2.0.0
 
-# Experiment Tracking & Observability
+# Experiment Tracking 
 wandb>=0.16.0
 
-# Tokenization
+# Tokenization & Datasets
 tiktoken>=0.5.0
+datasets>=2.14.0
 
 # Utilities
 tqdm>=4.65.0
