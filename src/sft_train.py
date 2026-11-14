@@ -40,10 +40,7 @@ def main():
     ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=torch.float16)
     tokenizer = get_tokenizer()
 
-    print("=" * 60)
-    print("Chat SFT Engine (Phase 2)")
-    print(f"Base Checkpoint: {sft_cfg.checkpoint_path}")
-    print("=" * 60)
+    print(f"Starting Chat SFT (Phase 2) | Checkpoint: {sft_cfg.checkpoint_path}")
 
     model = SmallLLM(model_cfg).to(device)
 
@@ -114,10 +111,10 @@ def main():
                     temperature=0.7,
                     top_k=30,
                     top_p=0.9,
-                    stop_id=tokenizer.im_end_id
+                    stop_id=[tokenizer.im_end_id, tokenizer.eos_id]
                 )
-                raw_output = tokenizer.decode(gen_tokens[0].tolist())
-                reply = tokenizer.extract_reply(raw_output)
+                new_tokens = gen_tokens[0, p_tokens.size(1):].tolist()
+                reply = tokenizer.extract_reply(tokenizer.decode(new_tokens))
                 print(f"  Q: {q}\n  A: {reply}\n")
                 if wandb_cfg.enabled:
                     chat_table.add_data(step, q, reply)

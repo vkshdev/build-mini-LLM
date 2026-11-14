@@ -51,13 +51,28 @@ class SFTDataset(Dataset):
             prompt_tokens = self.tokenizer.encode(prompt_str)
             response_tokens = self.tokenizer.encode(response_str)
 
-            input_ids = prompt_tokens + response_tokens
-            # mask prompt: loss is only calculated on assistant tokens
-            targets = [-100] * len(prompt_tokens) + response_tokens
+            # Skip samples where prompt is too long to leave reasonable room for response
+            if len(prompt_tokens) >= max_length - 8:
+                continue
 
-            if len(input_ids) > max_length:
-                input_ids = input_ids[:max_length]
-                targets = targets[:max_length]
+            full_tokens = prompt_tokens + response_tokens
+            full_targets = [-100] * len(prompt_tokens) + response_tokens
+
+            # Truncate sequence if it exceeds max_length + 1
+            if len(full_tokens) > max_length + 1:
+                full_tokens = full_tokens[:max_length + 1]
+                full_targets = full_targets[:max_length + 1]
+
+            # In causal autoregressive next-token prediction, tokens at step t predict step t+1.
+            # input_ids: full_tokens[:-1] (length T)
+            # targets:   full_targets[1:] (length T)
+            # At position len(prompt_tokens)-1 (prompt end), target is response_tokens[0].
+            input_ids = full_tokens[:-1]
+            targets = full_targets[1:]
+
+            # Ensure at least one response token has active loss
+            if not any(t != -100 for t in targets):
+                continue
 
             pad_len = max_length - len(input_ids)
             if pad_len > 0:

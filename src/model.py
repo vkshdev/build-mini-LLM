@@ -1,5 +1,5 @@
 import math
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union, List
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -112,6 +112,7 @@ class SmallLLM(nn.Module):
         n_params = sum(p.numel() for p in self.parameters())
         if non_embedding:
             n_params -= self.transformer.wpe.weight.numel()
+            n_params -= self.transformer.wte.weight.numel()
         return n_params
 
     def forward(
@@ -189,8 +190,10 @@ class SmallLLM(nn.Module):
         temperature: float = 0.8,
         top_k: Optional[int] = 40,
         top_p: Optional[float] = 0.9,
-        stop_id: Optional[int] = None
+        stop_id: Optional[Union[int, List[int]]] = None
     ) -> torch.Tensor:
+        stop_ids = [stop_id] if isinstance(stop_id, int) else (stop_id or [])
+
         for _ in range(max_new_tokens):
             idx_cond = idx if idx.size(1) <= self.config.block_size else idx[:, -self.config.block_size:]
             logits, _ = self(idx_cond)
@@ -213,7 +216,7 @@ class SmallLLM(nn.Module):
             idx_next = torch.multinomial(probs, num_samples=1)
             idx = torch.cat((idx, idx_next), dim=1)
 
-            if stop_id is not None and (idx_next == stop_id).all():
+            if stop_ids and any((idx_next == s).all() for s in stop_ids):
                 break
 
         return idx

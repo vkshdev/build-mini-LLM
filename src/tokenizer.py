@@ -50,10 +50,16 @@ class ChatMLTokenizer:
         return out
 
     def extract_reply(self, raw_output: str) -> str:
+        # If assistant header exists, take text following the first assistant turn
         if "<|im_start|>assistant\n" in raw_output:
-            reply = raw_output.split("<|im_start|>assistant\n")[-1]
-            return reply.replace("<|im_end|>", "").strip()
-        return raw_output.replace("<|im_end|>", "").strip()
+            raw_output = raw_output.split("<|im_start|>assistant\n", 1)[1]
+
+        # Stop at any end marker or next turn tag
+        for stop_marker in ["<|im_end|>", "<|im_start|>", "<|endoftext|>"]:
+            if stop_marker in raw_output:
+                raw_output = raw_output.split(stop_marker)[0]
+
+        return raw_output.strip()
 
 
 def get_tokenizer(backend: str = "tiktoken") -> ChatMLTokenizer:

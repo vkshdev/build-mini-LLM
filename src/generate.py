@@ -25,9 +25,7 @@ def main():
     tokenizer = get_tokenizer()
     config = ModelConfig()
 
-    print("=" * 60)
-    print(f"28M LLM Terminal | Device: {device.upper()} | Mode: {args.mode.upper()}")
-    print("=" * 60)
+    print(f"Interactive Session | Device: {device.upper()} | Mode: {args.mode.upper()}")
 
     if not os.path.exists(args.model_path):
         print(f"[Error] Checkpoint not found at: '{args.model_path}'")
@@ -59,13 +57,13 @@ def main():
                     temperature=args.temperature,
                     top_k=args.top_k,
                     top_p=args.top_p,
-                    stop_id=tokenizer.im_end_id
+                    stop_id=[tokenizer.im_end_id, tokenizer.eos_id]
                 )
                 dt = time.time() - t0
 
-                raw_output = tokenizer.decode(out_tokens[0].tolist())
-                reply = tokenizer.extract_reply(raw_output)
-                tok_count = out_tokens.size(1) - input_tokens.size(1)
+                new_tokens = out_tokens[0, input_tokens.size(1):].tolist()
+                reply = tokenizer.extract_reply(tokenizer.decode(new_tokens))
+                tok_count = len(new_tokens)
 
                 print(f"Chatbot > {reply}")
                 print(f"          [{tok_count} tokens in {dt:.2f}s ({tok_count / max(dt, 1e-4):.1f} tok/s)]\n")

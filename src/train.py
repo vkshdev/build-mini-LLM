@@ -83,12 +83,12 @@ def main():
     # AMP setup
     amp_dtype = torch.float16 if train_cfg.dtype == 'float16' else torch.bfloat16
     ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=amp_dtype)
-    scaler = torch.cuda.amp.GradScaler(enabled=(train_cfg.dtype == 'float16' and device_type == 'cuda'))
+    try:
+        scaler = torch.amp.GradScaler('cuda', enabled=(train_cfg.dtype == 'float16' and device_type == 'cuda'))
+    except Exception:
+        scaler = torch.cuda.amp.GradScaler(enabled=(train_cfg.dtype == 'float16' and device_type == 'cuda'))
 
-    print("=" * 60)
-    print("Pre-training 28M LLM (Phase 1)")
-    print(f"Device: {device.upper()} | Precision: {train_cfg.dtype}")
-    print("=" * 60)
+    print(f"Starting Pre-training (Phase 1) | Device: {device.upper()} | Precision: {train_cfg.dtype}")
 
     # ensure data exists
     train_bin = os.path.join(args.data_dir, "train.bin")
@@ -101,7 +101,9 @@ def main():
     tokenizer = get_tokenizer()
 
     model = SmallLLM(model_cfg).to(device)
-    print(f"Model params: {model.get_num_params(non_embedding=False) / 1e6:.2f}M")
+    core_params = model.get_num_params(non_embedding=True) / 1e6
+    total_params = model.get_num_params(non_embedding=False) / 1e6
+    print(f"Model parameters: {core_params:.2f}M core transformer ({total_params:.2f}M total with tied 50k embeddings)")
 
     optimizer = model.configure_optimizers(
         weight_decay=train_cfg.weight_decay,
