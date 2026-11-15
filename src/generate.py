@@ -11,6 +11,7 @@ from src.model import SmallLLM
 def parse_args():
     parser = argparse.ArgumentParser(description="Interactive Inference with Custom 28M LLM")
     parser.add_argument("--model_path", type=str, default="checkpoints/chat_model_28m.pt")
+    parser.add_argument("--tokenizer_path", type=str, default="data/tokenizer.json")
     parser.add_argument("--mode", type=str, choices=["chat", "story"], default="chat")
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--top_k", type=int, default=35)
@@ -22,7 +23,7 @@ def parse_args():
 def main():
     args = parse_args()
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    tokenizer = get_tokenizer()
+    tokenizer = get_tokenizer(args.tokenizer_path if os.path.exists(args.tokenizer_path) else None)
     config = ModelConfig()
 
     print(f"Interactive Session | Device: {device.upper()} | Mode: {args.mode.upper()}")
@@ -31,9 +32,18 @@ def main():
         print(f"[Error] Checkpoint not found at: '{args.model_path}'")
         return
 
-    model = SmallLLM(config).to(device)
     ckpt = torch.load(args.model_path, map_location=device)
     state_dict = ckpt.get("model_state_dict", ckpt)
+
+    if "config" in ckpt and "n_layer" in ckpt["config"]:
+        config.n_layer = ckpt["config"]["n_layer"]
+
+    if "transformer.wte.weight" in state_dict:
+        config.vocab_size = state_dict["transformer.wte.weight"].shape[0]
+    else:
+        config.vocab_size = tokenizer.vocab_size
+
+    model = SmallLLM(config).to(device)
     model.load_state_dict(state_dict)
     model.eval()
 
