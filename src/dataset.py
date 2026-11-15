@@ -94,18 +94,21 @@ class SFTDataset(Dataset):
 def prepare_tinystories(
     output_dir: str = "data",
     val_ratio: float = 0.05,
-    max_samples: Optional[int] = None
+    max_samples: Optional[int] = None,
+    vocab_size: int = 8192
 ) -> Tuple[str, str]:
-    """Downloads and converts TinyStories into binary train.bin and val.bin files."""
+    """Downloads TinyStories, trains 8k BPE if missing, and tokenizes into binary files."""
     from datasets import load_dataset
     from tqdm import tqdm
+    from src.tokenizer import train_custom_bpe, get_tokenizer
 
     os.makedirs(output_dir, exist_ok=True)
     train_bin_path = os.path.join(output_dir, "train.bin")
     val_bin_path = os.path.join(output_dir, "val.bin")
+    tokenizer_path = os.path.join(output_dir, "tokenizer.json")
 
-    if os.path.exists(train_bin_path) and os.path.exists(val_bin_path):
-        print(f"Tokenized files found in '{output_dir}', skipping preparation.")
+    if os.path.exists(train_bin_path) and os.path.exists(val_bin_path) and os.path.exists(tokenizer_path):
+        print(f"Tokenized files and tokenizer found in '{output_dir}', skipping preparation.")
         return train_bin_path, val_bin_path
 
     print("Fetching 'roneneldan/TinyStories' from Hugging Face...")
@@ -113,7 +116,24 @@ def prepare_tinystories(
     if max_samples:
         ds = ds.select(range(min(len(ds), max_samples)))
 
-    tokenizer = get_tokenizer()
+    if not os.path.exists(tokenizer_path):
+        print(f"Training custom {vocab_size}-vocab Byte-Level BPE tokenizer...")
+        train_subset_len = min(len(ds), 50000)
+
+        def text_iterator():
+            for i in range(train_subset_len):
+                t = ds[i].get("text", "").strip()
+                if t:
+                    yield t
+
+        train_custom_bpe(
+            texts=text_iterator(),
+            save_path=tokenizer_path,
+            vocab_size=vocab_size
+        )
+        print(f"Saved tokenizer -> '{tokenizer_path}'")
+
+    tokenizer = get_tokenizer(tokenizer_path)
     total_len = len(ds)
     val_size = max(int(total_len * val_ratio), 1000)
     train_size = total_len - val_size

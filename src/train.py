@@ -26,6 +26,7 @@ def str2bool(v: Union[str, bool]) -> bool:
 def parse_args():
     parser = argparse.ArgumentParser(description="Pre-train 28M LLM on TinyStories")
     parser.add_argument("--data_dir", type=str, default="data")
+    parser.add_argument("--tokenizer_path", type=str, default=None)
     parser.add_argument("--checkpoint_dir", type=str, default="checkpoints")
     parser.add_argument("--resume", type=str2bool, default=False)
     parser.add_argument("--max_steps", type=int, default=10000)
@@ -90,20 +91,31 @@ def main():
 
     print(f"Starting Pre-training (Phase 1) | Device: {device.upper()} | Precision: {train_cfg.dtype}")
 
-    # ensure data exists
+    # ensure data and tokenizer exist
     train_bin = os.path.join(args.data_dir, "train.bin")
     val_bin = os.path.join(args.data_dir, "val.bin")
-    if not (os.path.exists(train_bin) and os.path.exists(val_bin)):
-        prepare_tinystories(output_dir=args.data_dir)
+    tok_path = args.tokenizer_path or os.path.join(args.data_dir, "tokenizer.json")
+    if not (os.path.exists(train_bin) and os.path.exists(val_bin) and os.path.exists(tok_path)):
+        prepare_tinystories(output_dir=args.data_dir, vocab_size=model_cfg.vocab_size)
 
     train_buffer = PretrainingBuffer(train_bin, block_size=model_cfg.block_size)
     val_buffer = PretrainingBuffer(val_bin, block_size=model_cfg.block_size)
-    tokenizer = get_tokenizer()
+    tokenizer = get_tokenizer(tok_path if os.path.exists(tok_path) else None)
+    model_cfg.vocab_size = tokenizer.vocab_size
+
+    latest_ckpt = os.path.join(train_cfg.checkpoint_dir, "checkpoint_latest.pt")
+    if train_cfg.resume and os.path.exists(latest_ckpt):
+        ckpt_meta = torch.load(latest_ckpt, map_location="cpu")
+        if "config" in ckpt_meta:
+            if "vocab_size" in ckpt_meta["config"]:
+                model_cfg.vocab_size = ckpt_meta["config"]["vocab_size"]
+            if "n_layer" in ckpt_meta["config"]:
+                model_cfg.n_layer = ckpt_meta["config"]["n_layer"]
 
     model = SmallLLM(model_cfg).to(device)
     core_params = model.get_num_params(non_embedding=True) / 1e6
     total_params = model.get_num_params(non_embedding=False) / 1e6
-    print(f"Model parameters: {core_params:.2f}M core transformer ({total_params:.2f}M total with tied 50k embeddings)")
+    print(f"Model parameters: {core_params:.2f}M core transformer ({total_params:.2f}M total with tied {model_cfg.vocab_size} vocab embeddings)")
 
     optimizer = model.configure_optimizers(
         weight_decay=train_cfg.weight_decay,
@@ -114,7 +126,6 @@ def main():
 
     start_step = 0
     best_val_loss = float('inf')
-    latest_ckpt = os.path.join(train_cfg.checkpoint_dir, "checkpoint_latest.pt")
 
     # resume if requested
     if train_cfg.resume and os.path.exists(latest_ckpt):

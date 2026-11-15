@@ -13,11 +13,11 @@ except ImportError:
 @dataclass
 class ModelConfig:
     """Configuration for the model."""
-    vocab_size: int = 50260
+    vocab_size: int = 8192           # 8k byte-level BPE vocabulary
     block_size: int = 256            # context window length
-    n_layer: int = 8                 # transformer blocks
+    n_layer: int = 12                # 12 transformer blocks (42.1M params total)
     n_head: int = 8                  # attention heads (d_k = 64)
-    n_embd: int = 512                # embedding dimension (~28.3M params total)
+    n_embd: int = 512                # embedding dimension
     dropout: float = 0.1
     bias: bool = False               # False = faster, LLaMA style
 
@@ -65,7 +65,7 @@ class SFTConfig:
 class WandbConfig:
     enabled: bool = True
     project: str = "build-mini-LLM"
-    run_name: str = "tinystories-28m-pretrain"
+    run_name: str = "tinystories-42m-pretrain"
     entity: Optional[str] = None
-    notes: str = "28M Transformer on TinyStories"
-    tags: list = field(default_factory=lambda: ["pretraining", "28M", "tinystories", "kaggle-gpu"])
+    notes: str = "42M 12-layer Transformer on TinyStories"
+    tags: list = field(default_factory=lambda: ["pretraining", "42M", "tinystories", "kaggle-gpu"])

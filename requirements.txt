@@ -5,6 +5,7 @@ torch>=2.0.0
 wandb>=0.16.0
 
 # Tokenization & Datasets
+tokenizers>=0.15.0
 tiktoken>=0.5.0
 datasets>=2.14.0
 
