@@ -24,7 +24,7 @@ def str2bool(v: Union[str, bool]) -> bool:
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Pre-train 28M LLM on TinyStories")
+    parser = argparse.ArgumentParser(description="Pre-train 42M LLM on TinyStories")
     parser.add_argument("--data_dir", type=str, default="data")
     parser.add_argument("--tokenizer_path", type=str, default=None)
     parser.add_argument("--checkpoint_dir", type=str, default="checkpoints")
@@ -209,7 +209,7 @@ def main():
             # save best model checkpoint
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
-                best_path = os.path.join(train_cfg.checkpoint_dir, "best_pretrained_28m.pt")
+                best_path = os.path.join(train_cfg.checkpoint_dir, "best_pretrained_42m.pt")
                 torch.save({
                     "step": step,
                     "model_state_dict": {k: v.half() for k, v in model.state_dict().items()},

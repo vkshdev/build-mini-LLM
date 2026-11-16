@@ -9,8 +9,8 @@ from src.model import SmallLLM
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Interactive Inference with Custom 28M LLM")
-    parser.add_argument("--model_path", type=str, default="checkpoints/chat_model_28m.pt")
+    parser = argparse.ArgumentParser(description="Interactive Inference with Custom 42M LLM")
+    parser.add_argument("--model_path", type=str, default="checkpoints/chat_model_42m.pt")
     parser.add_argument("--tokenizer_path", type=str, default="data/tokenizer.json")
     parser.add_argument("--mode", type=str, choices=["chat", "story"], default="chat")
     parser.add_argument("--temperature", type=float, default=0.7)
@@ -29,11 +29,17 @@ def main():
 
     print(f"Interactive Session | Device: {device.upper()} | Mode: {args.mode.upper()}")
 
-    if not os.path.exists(args.model_path):
-        print(f"[Error] Checkpoint not found at: '{args.model_path}'")
-        return
+    model_path = args.model_path
+    if not os.path.exists(model_path):
+        fallback_path = model_path.replace("42m", "28m") if "42m" in model_path else model_path.replace("28m", "42m")
+        if os.path.exists(fallback_path):
+            print(f"'{model_path}' not found, falling back to '{fallback_path}'")
+            model_path = fallback_path
+        else:
+            print(f"[Error] Checkpoint not found at: '{model_path}'")
+            return
 
-    ckpt = torch.load(args.model_path, map_location=device)
+    ckpt = torch.load(model_path, map_location=device)
     state_dict = ckpt.get("model_state_dict", ckpt)
 
     if "config" in ckpt and "n_layer" in ckpt["config"]:

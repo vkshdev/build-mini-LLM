@@ -58,7 +58,7 @@ class SFTConfig:
     batch_size: int = 16
     gradient_accumulation_steps: int = 4
     eval_interval: int = 150
-    checkpoint_path: str = "checkpoints/best_pretrained_28m.pt"
+    checkpoint_path: str = "checkpoints/best_pretrained_42m.pt"
 
 
 @dataclass

@@ -13,7 +13,7 @@ from src.model import SmallLLM
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Chat SFT on Tiny-Alpaca")
-    parser.add_argument("--base_model", type=str, default="checkpoints/best_pretrained_28m.pt")
+    parser.add_argument("--base_model", type=str, default="checkpoints/best_pretrained_42m.pt")
     parser.add_argument("--output_dir", type=str, default="checkpoints")
     parser.add_argument("--data_dir", type=str, default="data")
     parser.add_argument("--tokenizer_path", type=str, default=None)
@@ -48,8 +48,15 @@ def main():
     print(f"Starting Chat SFT (Phase 2) | Checkpoint: {sft_cfg.checkpoint_path}")
 
     # load pre-trained weights
-    if os.path.exists(sft_cfg.checkpoint_path):
-        ckpt = torch.load(sft_cfg.checkpoint_path, map_location=device)
+    ckpt_path = sft_cfg.checkpoint_path
+    if not os.path.exists(ckpt_path):
+        fallback_path = ckpt_path.replace("42m", "28m") if "42m" in ckpt_path else ckpt_path.replace("28m", "42m")
+        if os.path.exists(fallback_path):
+            print(f"'{ckpt_path}' not found, falling back to '{fallback_path}'")
+            ckpt_path = fallback_path
+
+    if os.path.exists(ckpt_path):
+        ckpt = torch.load(ckpt_path, map_location=device)
         state_dict = ckpt.get("model_state_dict", ckpt)
         if "config" in ckpt and "n_layer" in ckpt["config"]:
             model_cfg.n_layer = ckpt["config"]["n_layer"]
@@ -57,9 +64,9 @@ def main():
             model_cfg.vocab_size = state_dict["transformer.wte.weight"].shape[0]
         model = SmallLLM(model_cfg).to(device)
         model.load_state_dict(state_dict, strict=False)
-        print("Pre-trained weights loaded.")
+        print(f"Pre-trained weights loaded from '{ckpt_path}'.")
     else:
-        print(f"[Warning] '{sft_cfg.checkpoint_path}' not found, training from random init.")
+        print(f"[Warning] '{ckpt_path}' not found, training from random init.")
         model = SmallLLM(model_cfg).to(device)
 
     dataloader = load_sft_data(tokenizer=tokenizer, max_samples=10000, batch_size=sft_cfg.batch_size)
@@ -135,7 +142,7 @@ def main():
 
     # save final chatbot weights
     os.makedirs(args.output_dir, exist_ok=True)
-    final_path = os.path.join(args.output_dir, "chat_model_28m.pt")
+    final_path = os.path.join(args.output_dir, "chat_model_42m.pt")
     torch.save({
         "model_state_dict": {k: v.half() for k, v in model.state_dict().items()},
         "config": model_cfg.__dict__,
