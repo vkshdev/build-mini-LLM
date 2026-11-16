@@ -16,6 +16,7 @@ def parse_args():
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--top_k", type=int, default=35)
     parser.add_argument("--top_p", type=float, default=0.9)
+    parser.add_argument("--repetition_penalty", type=float, default=1.2)
     parser.add_argument("--max_tokens", type=int, default=80)
     return parser.parse_args()
 
@@ -67,6 +68,7 @@ def main():
                     temperature=args.temperature,
                     top_k=args.top_k,
                     top_p=args.top_p,
+                    repetition_penalty=args.repetition_penalty,
                     stop_id=[tokenizer.im_end_id, tokenizer.eos_id]
                 )
                 dt = time.time() - t0
@@ -98,7 +100,8 @@ def main():
                     max_new_tokens=args.max_tokens,
                     temperature=args.temperature,
                     top_k=args.top_k,
-                    top_p=args.top_p
+                    top_p=args.top_p,
+                    repetition_penalty=args.repetition_penalty
                 )
                 dt = time.time() - t0
 

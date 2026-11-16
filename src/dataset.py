@@ -58,10 +58,9 @@ class SFTDataset(Dataset):
             full_tokens = prompt_tokens + response_tokens
             full_targets = [-100] * len(prompt_tokens) + response_tokens
 
-            # Truncate sequence if it exceeds max_length + 1
+            # Discard samples exceeding max context length to guarantee all examples terminate with <|im_end|>
             if len(full_tokens) > max_length + 1:
-                full_tokens = full_tokens[:max_length + 1]
-                full_targets = full_targets[:max_length + 1]
+                continue
 
             # In causal autoregressive next-token prediction, tokens at step t predict step t+1.
             # input_ids: full_tokens[:-1] (length T)
@@ -159,12 +158,25 @@ def load_sft_data(tokenizer: ChatMLTokenizer, max_samples: int = 10000, batch_si
     from datasets import load_dataset
     print("Loading instruction dataset (alpaca)...")
     ds = load_dataset("tatsu-lab/alpaca", split="train")
-    if max_samples:
-        ds = ds.select(range(min(len(ds), max_samples)))
 
-    raw_data = [
-        {"instruction": r["instruction"], "input": r.get("input", ""), "output": r["output"]}
-        for r in ds
-    ]
+    raw_data = []
+    skip_keywords = ["def ", "import ", "sql", "html", "javascript", "python", "http", "class ", "git ", "linux"]
+
+    for r in ds:
+        inst = r.get("instruction", "").strip()
+        inp = r.get("input", "").strip()
+        out = r.get("output", "").strip()
+        if not inst or not out:
+            continue
+
+        text_lower = (inst + " " + inp + " " + out).lower()
+        if any(kw in text_lower for kw in skip_keywords):
+            continue
+
+        raw_data.append({"instruction": inst, "input": inp, "output": out})
+        if len(raw_data) >= max_samples:
+            break
+
+    print(f"Loaded {len(raw_data)} clean non-code instruction samples.")
     sft_ds = SFTDataset(raw_data, tokenizer=tokenizer)
     return DataLoader(sft_ds, batch_size=batch_size, shuffle=True)

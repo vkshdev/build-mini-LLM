@@ -70,16 +70,16 @@ def main():
     if wandb_cfg.enabled:
         wandb.init(
             project=wandb_cfg.project,
-            name="tinystories-28m-chat-sft",
-            tags=["sft", "chat", "28M", "alpaca"],
+            name="tinystories-42m-chat-sft",
+            tags=["sft", "chat", "42M", "alpaca"],
             config={**model_cfg.__dict__, **sft_cfg.__dict__}
         )
         chat_table = wandb.Table(columns=["Step", "Instruction Query", "Assistant Response"])
 
     test_queries = [
-        "What should you do if you see a lost dog in the park?",
-        "Can you explain why the sky looks blue in simple words?",
-        "Write a 2-sentence story about a friendly mouse sharing an apple.",
+        "Write a 2-sentence story about a friendly mouse sharing an apple with a bird.",
+        "Tell me what happened when Lily found a little bird that could not fly.",
+        "Why is it important to be kind to our friends in the playground?",
     ]
 
     model.train()
@@ -120,6 +120,7 @@ def main():
                     temperature=0.7,
                     top_k=30,
                     top_p=0.9,
+                    repetition_penalty=1.2,
                     stop_id=[tokenizer.im_end_id, tokenizer.eos_id]
                 )
                 new_tokens = gen_tokens[0, p_tokens.size(1):].tolist()
@@ -142,7 +143,7 @@ def main():
     print(f"Chatbot weights saved -> '{final_path}'")
 
     if wandb_cfg.enabled:
-        art = wandb.Artifact("chat-28m-final", type="model")
+        art = wandb.Artifact("chat-42m-final", type="model")
         art.add_file(final_path)
         wandb.log_artifact(art, aliases=["latest", "production"])
         wandb.finish()

@@ -190,6 +190,7 @@ class SmallLLM(nn.Module):
         temperature: float = 0.8,
         top_k: Optional[int] = 40,
         top_p: Optional[float] = 0.9,
+        repetition_penalty: float = 1.0,
         stop_id: Optional[Union[int, List[int]]] = None
     ) -> torch.Tensor:
         stop_ids = [stop_id] if isinstance(stop_id, int) else (stop_id or [])
@@ -197,7 +198,17 @@ class SmallLLM(nn.Module):
         for _ in range(max_new_tokens):
             idx_cond = idx if idx.size(1) <= self.config.block_size else idx[:, -self.config.block_size:]
             logits, _ = self(idx_cond)
-            logits = logits[:, -1, :] / max(temperature, 1e-5)
+            logits = logits[:, -1, :]
+
+            if repetition_penalty != 1.0:
+                for b in range(logits.size(0)):
+                    for prev_token in set(idx[b].tolist()):
+                        if logits[b, prev_token] > 0:
+                            logits[b, prev_token] /= repetition_penalty
+                        else:
+                            logits[b, prev_token] *= repetition_penalty
+
+            logits = logits / max(temperature, 1e-5)
 
             if top_k is not None:
                 v, _ = torch.topk(logits, min(top_k, logits.size(-1)))

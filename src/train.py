@@ -218,7 +218,7 @@ def main():
                 }, best_path)
 
                 if wandb_cfg.enabled:
-                    art = wandb.Artifact("pretrained-28m-best", type="model")
+                    art = wandb.Artifact("pretrained-42m-best", type="model")
                     art.add_file(best_path)
                     wandb.log_artifact(art, aliases=["best", "latest"])
 
@@ -226,7 +226,7 @@ def main():
             model.eval()
             for p in test_prompts:
                 p_tokens = torch.tensor(tokenizer.encode(p), dtype=torch.long, device=device).unsqueeze(0)
-                gen_tokens = model.generate(p_tokens, max_new_tokens=40, temperature=0.75, top_k=30)
+                gen_tokens = model.generate(p_tokens, max_new_tokens=40, temperature=0.75, top_k=30, repetition_penalty=1.15)
                 gen_text = tokenizer.decode(gen_tokens[0].tolist())
                 print(f"  [Sample]: {gen_text}")
                 if wandb_cfg.enabled:
