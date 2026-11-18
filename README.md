@@ -1,27 +1,31 @@
 <div align="center">
 
-# build-mini-LLM
 
-### Building a 42M Generative Transformer from Scratch in PyTorch
+### Building a 42M Generative Transformer from Scratch
 
 [![W&B Report](https://img.shields.io/badge/Weights_&_Biases-Live_Report-FFBE00?logo=weightsandbiases&logoColor=black)](https://forge.coreweave.com/wandb/vkshdev-self/build-mini-LLM/reports/Building-a-Mini-LLM-from-Scratch--VmlldzoxODMxODc2NA?accessToken=wq5ui9gmd4b0i7uykev1jotre060e1pgzxghy3pcaiyr6hcmxawa3cu9rzonml3a)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
+
+
+[Read Full Technical Report on Weights & Biases](https://forge.coreweave.com/wandb/vkshdev-self/build-mini-LLM/reports/Building-a-Mini-LLM-from-Scratch--VmlldzoxODMxODc2NA?accessToken=wq5ui9gmd4b0i7uykev1jotre060e1pgzxghy3pcaiyr6hcmxawa3cu9rzonml3a)
 
 <br/>
 
 <p align="center">
   <img src="assets/neural-forward-pass.gif" width="55%" alt="Transformer Forward Pass" />
 </p>
-
-[Read Full Technical Report on Weights & Biases](https://forge.coreweave.com/wandb/vkshdev-self/build-mini-LLM/reports/Building-a-Mini-LLM-from-Scratch--VmlldzoxODMxODc2NA?accessToken=wq5ui9gmd4b0i7uykev1jotre060e1pgzxghy3pcaiyr6hcmxawa3cu9rzonml3a)
-
 </div>
+
+---
+
+> 🎓 **Do you want to build your first LLM?**  
+> We wrote a step-by-step tutorial explaining every single equation, line of code, and how to train your own model for free on Kaggle with VS Code:  
+> 👉 **[The Complete Master Guide: Build Your First Mini-LLM from Scratch](BUILD_YOUR_OWN_MINI_LLM.md)**
 
 ---
 
 ## Overview
 
-This is an end-to-end autoregressive language model project from first principles in PyTorch. There are no high-level trainer wrappers or imported transformer packages. Every layer, attention score, streaming data buffer, and training loop is built directly from scratch.
+This is an end-to-end autoregressive language model. There are no high-level trainer wrappers or imported transformer packages. Every layer, attention score, streaming data buffer, and training loop is built directly from scratch.
 
 Training follows the modern two-stage process:
 1. **Pre-training:** Next-token language modeling on 160M tokens of synthetic stories (`roneneldan/TinyStories`).
